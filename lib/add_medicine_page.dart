@@ -1,3 +1,4 @@
+import 'package:daroo/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as PersianDateTimePicker;
 import 'package:uuid/uuid.dart';
@@ -304,16 +305,14 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color:
-              isSelected
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                  : Colors.white,
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.15)
+              : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey.shade300,
+            color: isSelected
+                ? AppColors.primary
+                : Colors.grey.shade300,
           ),
         ),
         child: Column(
@@ -321,10 +320,9 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           children: [
             Icon(
               icon,
-              color:
-                  isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey.shade600,
+              color: isSelected
+                  ? AppColors.primary
+                  : Colors.grey.shade600,
               size: 24,
             ),
             SizedBox(height: 4),
@@ -332,10 +330,9 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color:
-                    isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey.shade800,
+                color: isSelected
+                    ? AppColors.primary
+                    : Colors.grey.shade800,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               textAlign: TextAlign.center,
@@ -349,45 +346,46 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   Widget _buildReminderTimesList() {
     return _selectedTimes.isEmpty
         ? Center(
-          child: Padding(
+          child: Container(
             padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Text(
               'هیچ زمان یادآوری تنظیم نشده است',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
         )
         : Column(
-          children:
-              _selectedTimes.map((time) {
-                return Container(
-                  margin: EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.alarm,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: Text(
-                      TimeFormatter.formatTo12Hour(time),
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _selectedTimes.remove(time);
-                        });
-                      },
-                    ),
-                  ),
-                );
-              }).toList(),
+          children: _selectedTimes.map((time) {
+            return Container(
+              margin: EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: AppColors.accent.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: Icon(
+                  Icons.alarm,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  TimeFormatter.formatTo12Hour(time),
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: () {
+                    setState(() {
+                      _selectedTimes.remove(time);
+                    });
+                  },
+                ),
+              ),
+            );
+          }).toList(),
         );
   }
 
@@ -397,11 +395,13 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       children: [
         Text(
           'روزهای یادآوری را انتخاب کنید:',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
           children: List.generate(7, (index) {
             final isSelected = _selectedDays.contains(index);
 
@@ -415,27 +415,28 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                   }
                 });
               },
-              child: Container(
-                width: 40,
-                height: 40,
+              child: AnimatedContainer(
+                duration: Duration(milliseconds: 200),
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color:
-                      isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey.shade100,
-                  border: Border.all(
-                    color:
-                        isSelected
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey.shade300,
-                  ),
+                  color: isSelected 
+                      ? AppColors.primary
+                      : AppColors.background,
+                  boxShadow: isSelected 
+                      ? [BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        )] 
+                      : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   _weekDaysShort[index],
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey.shade800,
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -630,9 +631,10 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           icon: Icon(Icons.add_alarm),
           label: Text('افزودن زمان یادآوری'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.inverseSurface,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),

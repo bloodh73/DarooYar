@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'دارو یار',
       theme: AppTheme.lightTheme,
+
       themeMode: ThemeMode.system, // استفاده از تم سیستم
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,

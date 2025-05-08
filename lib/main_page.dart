@@ -199,35 +199,48 @@ class _MainPageState extends State<MainPage> {
       ),
       body:
           _getBody(), // متد جدید برای نمایش محتوای مناسب بر اساس تب انتخاب شده
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medication_outlined),
-            activeIcon: Icon(Icons.medication),
-            label: 'داروها',
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          child: BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.medication_outlined),
+                activeIcon: Icon(Icons.medication),
+                label: 'داروها',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_today_outlined),
+                activeIcon: Icon(Icons.calendar_today),
+                label: 'تقویم',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'پروفایل',
+              ),
+            ],
+            currentIndex: _selectedIndex,
+            selectedItemColor: Theme.of(context).colorScheme.primary,
+            unselectedItemColor: Colors.grey,
+            backgroundColor: Colors.white,
+            elevation: 0,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            activeIcon: Icon(Icons.calendar_today),
-            label: 'تقویم',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'پروفایل',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        backgroundColor: Colors.white,
-        elevation: 8,
-        type: BottomNavigationBarType.fixed,
+        ),
       ),
       floatingActionButton:
           _selectedIndex == 0
@@ -462,140 +475,261 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildMedicineCard(Medicine medicine, int index) {
-    // تعیین رنگ و آیکون دارو بر اساس نوع دارو
-    final medicineColor = MedicineCardStyle.getColorByType(
-      medicine.medicineType,
-    );
+    final medicineColor = MedicineCardStyle.getColorByType(medicine.medicineType);
     final medicineIcon = MedicineCardStyle.getIconByType(medicine.medicineType);
     final isActive = medicine.isActive;
 
     return Card(
-      elevation: 0, // حذف سایه پیش‌فرض کارت
+      elevation: 0,
       margin: const EdgeInsets.only(bottom: 16, left: 2, right: 2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: medicineColor.withOpacity(0.5), width: 1.5),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: medicineColor.withOpacity(0.15),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => _viewMedicineDetails(medicine, index),
-            splashColor: medicineColor.withOpacity(0.1),
-            highlightColor: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // آیکون دارو
-                      _buildMedicineIcon(medicineIcon, medicineColor),
-                      const SizedBox(width: 12),
-                      // نام دارو و دوز
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              medicine.name,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: medicineColor,
+        child: InkWell(
+          onTap: () => _viewMedicineDetails(medicine, index),
+          splashColor: medicineColor.withOpacity(0.1),
+          highlightColor: Colors.transparent,
+          child: Column(
+            children: [
+              // هدر کارت با رنگ دارو
+              Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      medicineColor,
+                      Color(0xFFD50B8B), // رنگ اصلی پالت
+                    ],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // آیکون دارو
+                        Container(
+                          padding: EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFBF3C1).withOpacity(0.5), // رنگ زمینه زرد کمرنگ
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: medicineColor.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              medicine.dosage,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
+                            ],
+                          ),
+                          child: Icon(
+                            medicineIcon,
+                            color: medicineColor,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        
+                        // اطلاعات دارو
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                medicine.name,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D2D3A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: medicineColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      medicine.medicineType,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: medicineColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    medicine.dosage,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF7C7C8A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // سوئیچ فعال/غیرفعال
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch(
+                            value: isActive,
+                            onChanged: (value) {
+                              _toggleMedicineStatus(index, value);
+                            },
+                            activeColor: Color(0xFFD50B8B),
+                            activeTrackColor: Color(0xFFD50B8B).withOpacity(0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // خط جداکننده با گرادیان
+                    Container(
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            Color(0xFFDC8BE0).withOpacity(0.5),
+                            Colors.transparent,
                           ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
                       ),
-                      // دکمه ویرایش
-                      IconButton(
-                        icon: Icon(Icons.edit, color: medicineColor),
-                        onPressed: () => _editMedicine(medicine, index),
-                        tooltip: 'ویرایش دارو',
-                      ),
-                      // کلید فعال/غیرفعال
-                      Switch(
-                        value: isActive,
-                        onChanged:
-                            (value) => _toggleMedicineStatus(index, value),
-                        activeColor: medicineColor,
-                        activeTrackColor: medicineColor.withOpacity(0.3),
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.grey.withOpacity(0.2),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // زمان‌های یادآوری
-                  _buildReminderTimes(medicine.reminderTimes, medicineColor),
-                ],
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // زمان‌های مصرف دارو
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 16,
+                          color: Color(0xFF64E2B7),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'زمان مصرف:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF7C7C8A),
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // نمایش زمان‌های مصرف
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: medicine.reminderTimes.map((time) {
+                        return Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFBF3C1).withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Color(0xFFDC8BE0).withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            TimeFormatter.formatTo12Hour(time),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D2D3A),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // دکمه‌های عملیات
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // دکمه ویرایش
+                        Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () => _editMedicine(medicines[index], index),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                color: Color(0xFF64E2B7),
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        
+                        // دکمه حذف
+                        Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            onTap: () => _showDeleteConfirmation(index),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                Icons.delete_outline,
+                                color: Colors.redAccent,
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMedicineIcon(IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.5), width: 1.5),
-      ),
-      child: Icon(icon, color: color, size: 24),
-    );
-  }
-
-  Widget _buildReminderTimes(List<TimeOfDay> times, Color color) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children:
-          times.map((time) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.5), width: 1),
-              ),
-              child: Text(
-                TimeFormatter.formatTo12Hour(time),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            );
-          }).toList(),
-    );
-  }
-
-  // ویجت دایره روزهای هفته
-
-  // ویجت دکمه‌های عملیات
 
   IconData _getMedicineIcon(String medicineType) {
     switch (medicineType) {
@@ -1721,6 +1855,46 @@ class _MainPageState extends State<MainPage> {
       SnackBar(
         content: Text('این قابلیت در نسخه‌های آینده اضافه خواهد شد'),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+
+  void _showDeleteConfirmation(int index) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('حذف دارو'),
+        content: Text('آیا از حذف این دارو اطمینان دارید؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('انصراف'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // بستن دیالوگ
+              // حذف اعلان‌ها
+              NotificationService.cancelNotification(
+                medicines[index].id.hashCode % 10000,
+              );
+              // حذف دارو
+              setState(() {
+                medicines.removeAt(index);
+              });
+              _saveMedicines();
+              
+              // نمایش پیام حذف
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('دارو با موفقیت حذف شد'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: Text('حذف', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

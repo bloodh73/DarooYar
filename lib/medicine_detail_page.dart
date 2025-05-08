@@ -30,22 +30,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       appBar: AppBar(
         title: Text('جزئیات دارو'),
         centerTitle: true,
-        elevation: 4,
+        elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(), // حذف گوشه‌های گرد
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primary.withOpacity(0.8),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
         actions: [
           IconButton(
             icon: Icon(Icons.edit),
@@ -56,76 +43,76 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       ),
       body: SingleChildScrollView(
         physics: BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildMedicineHeader(),
-              SizedBox(height: 24),
-              _buildReminderTimesSection(),
-              SizedBox(height: 24),
-              _buildWeekDaysSection(),
-              SizedBox(height: 24),
-              _buildStatusToggle(),
-              SizedBox(height: 32),
-              _buildDeleteButton(),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildMedicineHeader(),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildReminderTimesSection(),
+                  SizedBox(height: 16),
+                  _buildWeekDaysSection(),
+                  SizedBox(height: 16),
+                  _buildStatusToggle(),
+                  SizedBox(height: 24),
+                  _buildDeleteButton(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildMedicineHeader() {
-    Color backgroundColor = MedicineCardStyle.getColorByType(
+    final backgroundColor = MedicineCardStyle.getColorByType(
       _medicine.medicineType,
     );
 
-    return Card(
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [backgroundColor, backgroundColor.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+      ),
+      child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  // آیکون دارو با افکت نئومورفیک
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.5),
-                        width: 1.5,
+                  Hero(
+                    tag: 'medicine-icon-${_medicine.id}',
+                    child: Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        MedicineCardStyle.getIconByType(_medicine.medicineType),
+                        color: Colors.white,
+                        size: 36,
                       ),
                     ),
-                    child: Icon(
-                      _getMedicineIcon(_medicine.medicineType),
-                      color: Colors.white,
-                      size: 36,
-                    ),
                   ),
-                  SizedBox(width: 16),
+                  SizedBox(width: 20),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,14 +123,6 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            letterSpacing: 0.5,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black26,
-                                offset: Offset(0, 1),
-                                blurRadius: 2,
-                              ),
-                            ],
                           ),
                         ),
                         SizedBox(height: 8),
@@ -157,11 +136,10 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            _medicine.dosage,
+                            _medicine.medicineType,
                             style: TextStyle(
-                              fontSize: 16,
                               color: Colors.white,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -170,44 +148,19 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                   ),
                 ],
               ),
-              // اضافه کردن اطلاعات بیشتر در صورت نیاز
-              if (_medicine.notes != null && _medicine.notes!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.notes, color: Colors.white, size: 18),
-                            SizedBox(width: 8),
-                            Text(
-                              'یادداشت:',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          _medicine.notes!,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
-                    ),
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildInfoItem(Icons.straighten, 'دوز', _medicine.dosage),
+                  _buildInfoItem(
+                    Icons.calendar_today,
+                    'شروع',
+                    _formatDate(_medicine.startDate),
                   ),
-                ),
+                  _buildInfoItem(Icons.repeat, 'تکرار', _getRepeatText()),
+                ],
+              ),
             ],
           ),
         ),
@@ -215,37 +168,72 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     );
   }
 
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.white, size: 20),
+        ),
+        SizedBox(height: 8),
+        Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+        ),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildReminderTimesSection() {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.access_time_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 26,
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.access_time_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 22,
+                  ),
                 ),
                 SizedBox(width: 12),
                 Text(
                   'زمان‌های یادآوری',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: 10,
+              runSpacing: 10,
               children:
                   _medicine.reminderTimes.map((time) {
                     return Container(
@@ -253,33 +241,26 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                         color: Theme.of(
                           context,
                         ).colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                        horizontal: 12,
+                        vertical: 8,
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             Icons.alarm,
-                            size: 20,
+                            size: 18,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: 6),
                           Text(
                             TimeFormatter.formatTo12Hour(time),
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -305,38 +286,40 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     ];
 
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.calendar_today_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 26,
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.calendar_today_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 22,
+                  ),
                 ),
                 SizedBox(width: 12),
                 Text(
                   'روزهای هفته',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
             Container(
               padding: EdgeInsets.symmetric(vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(7, (index) {
@@ -345,8 +328,8 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                     children: [
                       AnimatedContainer(
                         duration: Duration(milliseconds: 200),
-                        width: 40,
-                        height: 40,
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color:
@@ -359,9 +342,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                                     BoxShadow(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.primary.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 3),
+                                      ).colorScheme.primary.withOpacity(0.3),
+                                      blurRadius: 6,
+                                      offset: Offset(0, 2),
                                     ),
                                   ]
                                   : null,
@@ -373,16 +356,16 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                               color:
                                   isSelected ? Colors.white : Colors.grey[600],
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 6),
                       Text(
                         weekDays[index],
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color:
                               isSelected
                                   ? Theme.of(context).colorScheme.primary
@@ -404,144 +387,98 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
 
   Widget _buildStatusToggle() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              _medicine.isActive
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.05)
-                  : Colors.grey.withOpacity(0.05),
-              _medicine.isActive
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color:
-                      _medicine.isActive
-                          ? Theme.of(
-                            context,
-                          ).colorScheme.primary.withOpacity(0.15)
-                          : Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          _medicine.isActive
-                              ? Theme.of(
-                                context,
-                              ).colorScheme.primary.withOpacity(0.2)
-                              : Colors.transparent,
-                      blurRadius: 8,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  _medicine.isActive
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_off_rounded,
-                  color:
-                      _medicine.isActive
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
-                  size: 28,
-                ),
-              ),
-              SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'وضعیت یادآوری',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          _medicine.isActive
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey[700],
-                    ),
-                  ),
-                  SizedBox(height: 6),
-                  Text(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color:
                     _medicine.isActive
-                        ? 'یادآوری فعال است'
-                        : 'یادآوری غیرفعال است',
-                    style: TextStyle(
-                      color:
-                          _medicine.isActive
-                              ? Colors.green[700]
-                              : Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
               ),
-              Spacer(),
-              Transform.scale(
-                scale: 1.2,
-                child: Switch(
-                  value: _medicine.isActive,
-                  onChanged: (value) {
-                    setState(() {
-                      _medicine = Medicine(
-                        id: _medicine.id,
-                        name: _medicine.name,
-                        dosage: _medicine.dosage,
-                        medicineType: _medicine.medicineType,
-                        reminderTimes: _medicine.reminderTimes,
-                        weekDays: _medicine.weekDays,
-                        startDate: _medicine.startDate,
-                        endDate: _medicine.endDate,
-                        isActive: value,
-                        alarmTone: _medicine.alarmTone,
-                      );
-                    });
-
-                    // اینجا باید کد مربوط به فعال/غیرفعال کردن اعلان‌ها اضافه شود
-                    if (value) {
-                      // فعال کردن اعلان‌ها
-                      for (TimeOfDay time in _medicine.reminderTimes) {
-                        NotificationService.scheduleNotification(
-                          id: _medicine.id.hashCode % 10000,
-                          title: 'یادآوری دارو: ${_medicine.name}',
-                          body:
-                              'زمان مصرف دارو با دوز ${_medicine.dosage} فرا رسیده است.',
-                          time: time,
-                          weekDays: _medicine.weekDays,
-                        );
-                      }
-                    } else {
-                      // غیرفعال کردن اعلان‌ها
-                      NotificationService.cancelNotification(
-                        _medicine.id.hashCode % 10000,
-                      );
-                    }
-                  },
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  activeTrackColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withOpacity(0.4),
-                  inactiveThumbColor: Colors.grey[400],
-                  inactiveTrackColor: Colors.grey[300],
+              child: Icon(
+                _medicine.isActive
+                    ? Icons.notifications_active_rounded
+                    : Icons.notifications_off_rounded,
+                color:
+                    _medicine.isActive
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
+                size: 22,
+              ),
+            ),
+            SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'وضعیت یادآوری',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
-          ),
+                SizedBox(height: 4),
+                Text(
+                  _medicine.isActive
+                      ? 'یادآوری فعال است'
+                      : 'یادآوری غیرفعال است',
+                  style: TextStyle(
+                    color:
+                        _medicine.isActive
+                            ? Colors.green[700]
+                            : Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            Spacer(),
+            Switch(
+              value: _medicine.isActive,
+              onChanged: (value) {
+                setState(() {
+                  _medicine = Medicine(
+                    id: _medicine.id,
+                    name: _medicine.name,
+                    dosage: _medicine.dosage,
+                    medicineType: _medicine.medicineType,
+                    reminderTimes: _medicine.reminderTimes,
+                    weekDays: _medicine.weekDays,
+                    startDate: _medicine.startDate,
+                    endDate: _medicine.endDate,
+                    isActive: value,
+                    alarmTone: _medicine.alarmTone,
+                  );
+                });
+
+                if (value) {
+                  for (TimeOfDay time in _medicine.reminderTimes) {
+                    NotificationService.scheduleNotification(
+                      id: _medicine.id.hashCode % 10000,
+                      title: 'یادآوری دارو: ${_medicine.name}',
+                      body:
+                          'زمان مصرف دارو با دوز ${_medicine.dosage} فرا رسیده است.',
+                      time: time,
+                      weekDays: _medicine.weekDays,
+                    );
+                  }
+                } else {
+                  NotificationService.cancelNotification(
+                    _medicine.id.hashCode % 10000,
+                  );
+                }
+              },
+              activeColor: Theme.of(context).colorScheme.primary,
+              activeTrackColor: Theme.of(
+                context,
+              ).colorScheme.primary.withOpacity(0.4),
+            ),
+          ],
         ),
       ),
     );
@@ -551,20 +488,43 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        icon: Icon(Icons.delete_outline_rounded),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: Text('حذف دارو'),
+                  content: Text('آیا از حذف این دارو اطمینان دارید؟'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('انصراف'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // بستن دیالوگ
+                        Navigator.pop(
+                          context,
+                          'delete',
+                        ); // برگشت به صفحه قبل با نتیجه حذف
+                      },
+                      child: Text('حذف', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+          );
+        },
+        icon: Icon(Icons.delete_outline, color: Colors.white),
         label: Text(
           'حذف دارو',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, color: Colors.white),
         ),
-        onPressed: _showDeleteConfirmation,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red[600],
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: Colors.red,
+          padding: EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
-          elevation: 3,
         ),
       ),
     );
@@ -620,24 +580,17 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     );
   }
 
-  IconData _getMedicineIcon(String medicineType) {
-    switch (medicineType) {
-      case 'قرص':
-        return Icons.tablet;
-      case 'کپسول':
-        return Icons.medication;
-      case 'شربت':
-        return Icons.local_drink;
-      case 'آمپول':
-        return Icons.vaccines;
-      case 'پماد':
-        return Icons.healing;
-      case 'قطره':
-        return Icons.opacity;
-      case 'اسپری':
-        return Icons.spa;
-      default:
-        return Icons.medical_services;
+  String _getRepeatText() {
+    if (_medicine.weekDays.length == 7) {
+      return "هر روز";
+    } else if (_medicine.weekDays.isEmpty) {
+      return "هیچ روز";
+    } else {
+      return "${_medicine.weekDays.length} روز در هفته";
     }
+  }
+
+  String _formatDate(DateTime date) {
+    return "${date.year}/${date.month}/${date.day}";
   }
 }

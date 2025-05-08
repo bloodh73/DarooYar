@@ -2,94 +2,132 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  // تم روشن
+  // تم روشن با پالت رنگ جدید
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.light(
-      primary: AppColors.primary, // سبز تیره
-      secondary: AppColors.secondary, // سبز-آبی روشن
-      tertiary: AppColors.accent, // سبز-آبی تیره
-      surface: Colors.white,
-      background: AppColors.background, // سبز بسیار روشن
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      tertiary: AppColors.accent,
+      surface: AppColors.surface,
+      background: AppColors.backgroundLight,
       error: AppColors.error,
       onPrimary: Colors.white,
-      onSecondary: AppColors.textPrimary,
+      onSecondary: Colors.white,
       onBackground: AppColors.textPrimary,
       onSurface: AppColors.textPrimary,
-      surfaceTint: AppColors.primary.withOpacity(0.05),
+      surfaceTint: Colors.transparent,
     ),
-    scaffoldBackgroundColor: AppColors.background,
+    scaffoldBackgroundColor: AppColors.backgroundLight,
     fontFamily: 'Vazir',
+
+    // AppBar جدید
     appBarTheme: AppBarTheme(
-      elevation: 2,
+      elevation: 0,
       centerTitle: true,
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(),
+      iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        fontFamily: 'Vazir',
+      ),
     ),
+
+    // Card جدید
     cardTheme: CardTheme(
-      color: Colors.white,
-      elevation: 2,
+      color: AppColors.surface,
+      elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
     ),
+
+    // دکمه‌های جدید
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
-        elevation: 2,
+        elevation: 0,
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Vazir',
+        ),
       ),
     ),
+
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
+        textStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Vazir',
+        ),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.primary,
+        side: BorderSide(color: AppColors.primary, width: 1.5),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Vazir',
+        ),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(color: Colors.grey.shade300),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(color: AppColors.primary, width: 2),
-      ),
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
+
+
+
+    // Chip جدید
     chipTheme: ChipThemeData(
-      backgroundColor: Colors.grey[200],
-      labelStyle: TextStyle(color: Colors.black87),
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      backgroundColor: AppColors.background,
+      disabledColor: AppColors.background.withOpacity(0.5),
+      selectedColor: AppColors.primary,
+      secondarySelectedColor: AppColors.primary,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      labelStyle: TextStyle(color: AppColors.textPrimary, fontFamily: 'Vazir'),
+      secondaryLabelStyle: TextStyle(color: Colors.white, fontFamily: 'Vazir'),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
+
+    // Switch جدید
     switchTheme: SwitchThemeData(
       thumbColor: MaterialStateProperty.resolveWith<Color>((states) {
         if (states.contains(MaterialState.selected)) {
           return AppColors.primary;
         }
-        return Colors.grey[400]!;
+        return Colors.grey.shade400;
       }),
       trackColor: MaterialStateProperty.resolveWith<Color>((states) {
         if (states.contains(MaterialState.selected)) {
           return AppColors.primary.withOpacity(0.5);
         }
-        return Colors.grey[300]!;
+        return Colors.grey.shade300;
       }),
     ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+
+    // Slider جدید
+    sliderTheme: SliderThemeData(
+      activeTrackColor: AppColors.primary,
+      inactiveTrackColor: AppColors.background,
+      thumbColor: AppColors.primary,
+      overlayColor: AppColors.primary.withOpacity(0.2),
+      valueIndicatorColor: AppColors.primary,
+      valueIndicatorTextStyle: TextStyle(
+        color: Colors.white,
+        fontFamily: 'Vazir',
+      ),
     ),
   );
 }
-
-
-
 

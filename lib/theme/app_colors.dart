@@ -1,35 +1,36 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // رنگ‌های اصلی برای حالت روشن
-  static const Color primary = Color(0xFF1976D2); // آبی تیره
-  static const Color secondary = Color(0xFFBBDEFB); // آبی روشن
-  static const Color accent = Color(0xFF0D47A1); // آبی خیلی تیره
-  static const Color background = Color(0xFFE3F2FD); // آبی بسیار روشن
-
-  // رنگ‌های اصلی برای حالت تاریک
-  static const Color primaryDark = Color(0xFF2196F3); // آبی روشن‌تر
-  static const Color secondaryDark = Color(0xFF0D47A1); // آبی خیلی تیره
-  static const Color accentDark = Color(0xFF64B5F6); // آبی روشن
-  static const Color backgroundDark = Color(0xFF0A1929); // آبی-خاکستری تیره
-
-  // رنگ‌های وضعیت (بدون تغییر)
-  static const Color success = Color(0xFF43A047);
-  static const Color warning = Color(0xFFFFB300);
-  static const Color error = Color(0xFFE53935);
-  static const Color info = Color(0xFF2196F3); // آبی
+  // پالت رنگ جدید
+  static const Color primary = Color(0xFFCF4DCE); // بنفش (CF4DCE)
+  static const Color secondary = Color(0xFFF273E6); // صورتی روشن (F273E6)
+  static const Color accent = Color(0xFFFF8B13); // نارنجی (FF8B13)
+  static const Color background = Color(0xFFECECEC); // خاکستری روشن (ECECEC)
+  static const Color backgroundLight = Color(0xFFF5F5F5); // خاکستری بسیار روشن
+  static const Color surface = Color(0xFFFFFFFF); // سفید
 
   // رنگ‌های متن
-  static const Color textPrimary = Color(0xFF0D47A1); // آبی تیره
-  static const Color textSecondary = Color(0xFF1565C0); // آبی متوسط
-  static const Color textHint = Color(0xFF42A5F5); // آبی روشن
+  static const Color textPrimary = Color(0xFF2D2D3A); // خاکستری تیره
+  static const Color textSecondary = Color(0xFF7C7C8A); // خاکستری متوسط
+  static const Color textOnPrimary = Color(0xFFFFFFFF); // سفید
 
-  // رنگ‌های پس‌زمینه
-  static const Color surface = Color(0xFFFFFFFF); // سفید
-  static const Color divider = Color(0xFFE3F2FD); // آبی بسیار روشن
+  // رنگ‌های کاربردی
+  static const Color error = Color(0xFFE53935); // قرمز
+  static const Color success = Color(0xFF4CAF50); // سبز
+  static const Color warning = Color(0xFFFF8B13); // نارنجی (FF8B13)
+  static const Color info = Color(0xFF29B6F6); // آبی روشن
+
+  // رنگ‌های دارو
+  static const Color pill = Color(0xFFCF4DCE); // بنفش (CF4DCE)
+  static const Color syrup = Color(0xFFFF8B13); // نارنجی (FF8B13)
+  static const Color capsule = Color(0xFFF273E6); // صورتی روشن (F273E6)
+  static const Color injection = Color(0xFF4CAF50); // سبز
+  static const Color powder = Color(0xFFECECEC); // خاکستری روشن (ECECEC)
+  static const Color drops = Color(0xFF29B6F6); // آبی روشن
+  static const Color inhaler = Color(0xFFF273E6); // صورتی روشن (F273E6)
+  static const Color topical = Color(0xFFFF8B13); // نارنجی (FF8B13)
+
+  // سایه‌های رنگ اصلی
+  static const Color primaryLight = Color(0xFFF273E6); // صورتی روشن (F273E6)
+  static const Color primaryDark = Color(0xFFAA3AAA); // بنفش تیره‌تر
 }
-
-
-
-
-
