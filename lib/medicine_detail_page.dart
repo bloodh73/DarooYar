@@ -548,38 +548,6 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     }
   }
 
-  void _showDeleteConfirmation() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('حذف دارو'),
-            content: Text('آیا از حذف این دارو اطمینان دارید؟'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('انصراف'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // بستن دیالوگ
-                  // حذف اعلان‌ها
-                  NotificationService.cancelNotification(
-                    _medicine.id.hashCode % 10000,
-                  );
-                  // برگشت به صفحه قبل با ارسال دستور حذف
-                  Navigator.pop(context, {
-                    'action': 'delete',
-                    'medicine': _medicine,
-                  });
-                },
-                child: Text('حذف', style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-    );
-  }
-
   String _getRepeatText() {
     if (_medicine.weekDays.length == 7) {
       return "هر روز";
