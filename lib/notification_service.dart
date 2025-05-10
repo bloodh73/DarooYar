@@ -1,73 +1,30 @@
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz_data;
-import 'dart:io' show Platform;
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:flutter/material.dart';
+import 'dart:io';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    tz_data.initializeTimeZones();
+    tz.initializeTimeZones();
 
-    const AndroidInitializationSettings androidSettings =
+    const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings(
-          requestAlertPermission: true,
-          requestBadgePermission: true,
-          requestSoundPermission: true,
-        );
 
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await _notifications.initialize(
-      initSettings,
+      initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         // اینجا می‌توانید کد مربوط به کلیک روی اعلان را قرار دهید
       },
     );
 
-    // درخواست مجوزهای لازم
-    await _requestPermissions();
-  }
-
-  static Future<void> _requestPermissions() async {
-    try {
-      if (Platform.isAndroid) {
-        // درخواست مجوز برای اندروید
-        final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
-            _notifications
-                .resolvePlatformSpecificImplementation<
-                  AndroidFlutterLocalNotificationsPlugin
-                >();
-
-        // درخواست مجوز اعلان‌های دقیق برای اندروید 12 و بالاتر
-        await androidPlugin?.requestExactAlarmsPermission();
-        await androidPlugin?.requestNotificationsPermission();
-      } else if (Platform.isIOS) {
-        // درخواست مجوز برای iOS
-        final IOSFlutterLocalNotificationsPlugin? iosPlugin =
-            _notifications
-                .resolvePlatformSpecificImplementation<
-                  IOSFlutterLocalNotificationsPlugin
-                >();
-        await iosPlugin?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-      }
-    } catch (e) {
-      debugPrint('Error requesting permissions: $e');
-      // Continue execution even if permission request fails
-    }
+    print('سرویس اعلان با موفقیت راه‌اندازی شد');
   }
 
   static Future<void> scheduleNotification({
@@ -76,69 +33,75 @@ class NotificationService {
     required String body,
     required TimeOfDay time,
     required List<int> weekDays,
-    String sound = 'alarm_sound',
+    required String sound,
   }) async {
     try {
+      // بررسی مجوز اعلان‌های دقیق
+      bool hasPermission = await checkExactAlarmPermission();
+      if (!hasPermission) {
+        print('مجوز اعلان‌های دقیق وجود ندارد');
+        return;
+      }
+
+      // تنظیم زمان اعلان
+      final now = DateTime.now();
+      final scheduledDate = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        time.hour,
+        time.minute,
+      );
+
+      // اگر زمان گذشته است، به روز بعد منتقل می‌شود
+      final scheduleTime =
+          scheduledDate.isBefore(now)
+              ? scheduledDate.add(Duration(days: 1))
+              : scheduledDate;
+
+      // تنظیم صدای اعلان
+      AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'medicine_reminder_channel',
+        'یادآوری دارو',
+        channelDescription: 'کانال اعلان برای یادآوری مصرف دارو',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound(sound),
+        playSound: true,
+      );
+
+      NotificationDetails platformDetails = NotificationDetails(
+        android: androidDetails,
+      );
+
+      // برای هر روز هفته یک اعلان جداگانه تنظیم می‌کنیم
       for (int weekDay in weekDays) {
-        // ایجاد شناسه منحصر به فرد در محدوده مجاز 32 بیتی
-        final int notificationId = _generateUniqueId(id, weekDay, time);
-
-        final scheduledDate = _nextInstanceOfWeekDay(weekDay, time);
-
-        final androidDetails = AndroidNotificationDetails(
-          'medicine_reminder_channel',
-          'یادآوری دارو',
-          channelDescription: 'اعلان‌های مربوط به یادآوری مصرف دارو',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-          sound: RawResourceAndroidNotificationSound(sound),
-          playSound: true,
-          enableVibration: true,
-          vibrationPattern: Int64List.fromList([0, 500, 200, 500, 200, 500]),
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-        );
-
-        final iosDetails = DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          sound: '$sound.aiff',
-          interruptionLevel: InterruptionLevel.timeSensitive,
-        );
-
-        final notificationDetails = NotificationDetails(
-          android: androidDetails,
-          iOS: iosDetails,
-        );
-
-        // برای اندروید 12 و بالاتر، از روش متفاوتی استفاده می‌کنیم
-        if (Platform.isAndroid) {
-          // استفاده از روش جایگزین برای اندروید
-          await _notifications.zonedSchedule(
-            notificationId,
-            title,
-            body,
-            tz.TZDateTime.from(scheduledDate, tz.local),
-            notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-          );
-        } else {
-          await _notifications.zonedSchedule(
-            notificationId,
-            title,
-            body,
-            tz.TZDateTime.from(scheduledDate, tz.local),
-            notificationDetails,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-          );
+        int daysToAdd = (weekDay - now.weekday) % 7;
+        if (daysToAdd == 0 && scheduledDate.isBefore(now)) {
+          daysToAdd = 7;
         }
+
+        final dayScheduleTime = tz.TZDateTime.from(
+          scheduleTime.add(Duration(days: daysToAdd)),
+          tz.local,
+        );
+
+        // ایجاد شناسه منحصر به فرد برای هر اعلان در محدوده مجاز 32 بیتی
+        final notificationId = (id * 10 + weekDay) % 100000;
+
+        await _notifications.zonedSchedule(
+          notificationId,
+          title,
+          body,
+          dayScheduleTime,
+          platformDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
       }
     } catch (e) {
-      debugPrint('Error scheduling notification: $e');
+      print('خطا در تنظیم اعلان: $e');
+      rethrow; // انتشار خطا برای مدیریت در لایه بالاتر
     }
   }
 
@@ -150,52 +113,63 @@ class NotificationService {
     await _notifications.cancelAll();
   }
 
-  // ایجاد شناسه منحصر به فرد در محدوده مجاز 32 بیتی
-  static int _generateUniqueId(int baseId, int weekDay, TimeOfDay time) {
-    // استفاده از روشی که شناسه کوچکتری تولید می‌کند
-    int timeComponent = time.hour * 100 + time.minute;
-    int id = ((baseId % 1000) * 1000) + (timeComponent * 10) + weekDay;
-
-    // اطمینان از اینکه شناسه در محدوده مجاز 32 بیتی باشد
-    return id % 0x7FFFFFFF; // 2^31 - 1 (حداکثر مقدار مجاز)
-  }
-
-  static DateTime _nextInstanceOfWeekDay(int weekDay, TimeOfDay time) {
-    DateTime now = DateTime.now();
-
-    // تبدیل روز هفته از فرمت ایرانی (شنبه=0) به فرمت میلادی (دوشنبه=1)
-    // در فرمت میلادی: دوشنبه=1، سه‌شنبه=2، ...، یکشنبه=7
-    // در فرمت ایرانی: شنبه=0، یکشنبه=1، ...، جمعه=6
-    int targetWeekDay = (weekDay + 2) % 7; // تبدیل به فرمت میلادی
-    if (targetWeekDay == 0) targetWeekDay = 7; // یکشنبه در فرمت میلادی 7 است
-
-    DateTime scheduledDate = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      time.hour,
-      time.minute,
+  static Future<void> showImmediateNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'medicine_reminder_channel',
+      'یادآوری دارو',
+      channelDescription: 'کانال اعلان برای یادآوری مصرف دارو',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
     );
 
-    while (scheduledDate.weekday != targetWeekDay ||
-        scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(Duration(days: 1));
-    }
+    NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
 
-    return scheduledDate;
+    await _notifications.show(id, title, body, platformDetails);
+
+    print('اعلان فوری با موفقیت ارسال شد: $id');
   }
 
-  // روش برای نمایش صفحه تنظیمات اعلان‌ها
-  static Future<void> openNotificationSettings() async {
-    try {
-      await _notifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.requestNotificationsPermission();
-    } catch (e) {
-      debugPrint('Error opening notification settings: $e');
-      // Continue execution even if opening settings fails
+  static Future<bool> requestExactAlarmPermission() async {
+    if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+          FlutterLocalNotificationsPlugin()
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+
+      // بررسی آیا مجوز اعلان‌های دقیق وجود دارد
+      final bool? hasPermission =
+          await androidPlugin?.canScheduleExactNotifications();
+
+      if (hasPermission != true) {
+        // درخواست مجوز اعلان‌های دقیق
+        await androidPlugin?.requestExactAlarmsPermission();
+        return false;
+      }
+      return true;
     }
+    return true; // در پلتفرم‌های دیگر نیازی به مجوز خاصی نیست
+  }
+
+  static Future<bool> checkExactAlarmPermission() async {
+    if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidPlugin =
+          FlutterLocalNotificationsPlugin()
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+
+      final bool? hasPermission =
+          await androidPlugin?.canScheduleExactNotifications();
+      return hasPermission ?? false;
+    }
+    return true; // در پلتفرم‌های دیگر نیازی به مجوز خاصی نیست
   }
 }

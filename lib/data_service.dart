@@ -55,7 +55,9 @@ class DataService {
         startDate: DateTime.parse(map['startDate']),
         endDate: map['endDate'] != null ? DateTime.parse(map['endDate']) : null,
         isActive: map['isActive'],
+        notes: map['notes'] ?? '',
       );
     }).toList();
   }
 }
+

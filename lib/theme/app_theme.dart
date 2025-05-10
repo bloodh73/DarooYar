@@ -86,8 +86,6 @@ class AppTheme {
       ),
     ),
 
-
-
     // Chip جدید
     chipTheme: ChipThemeData(
       backgroundColor: AppColors.background,
@@ -130,4 +128,3 @@ class AppTheme {
     ),
   );
 }
-

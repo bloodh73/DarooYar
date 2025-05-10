@@ -1,9 +1,9 @@
 import 'package:daroo/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as PersianDateTimePicker;
-import 'package:uuid/uuid.dart';
 import 'medicine_model.dart';
 import 'utils/time_formatter.dart';
+import 'notification_service.dart'; // استفاده از سرویس اعلان
 
 class AddMedicinePage extends StatefulWidget {
   final Medicine? medicine; // برای ویرایش دارو
@@ -18,6 +18,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController();
+  final _notesController = TextEditingController();
   String _selectedMedicineType = 'قرص';
   String _selectedAlarmTone = 'default';
   List<TimeOfDay> _selectedTimes = [];
@@ -37,23 +38,38 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
   // Make sure each alarm tone has a unique ID
   final List<Map<String, String>> _alarmTones = [
-    {'id': 'default', 'name': 'صدای پیش‌فرض'},
-    {'id': 'alarm_sound', 'name': 'زنگ هشدار'},
-    {'id': 'bell', 'name': 'زنگ'},
-    {'id': 'chime', 'name': 'ناقوس'},
-    // Make sure no other items use 'default' as their id
+    {'id': 'notification_sound', 'name': 'صدای پیش‌فرض'},
+    // فعلاً فقط از صدای پیش‌فرض استفاده می‌کنیم تا فایل‌های صوتی اضافه شوند
+    // {'id': 'alarm_sound', 'name': 'زنگ هشدار'},
+    // {'id': 'bell', 'name': 'زنگ'},
+    // {'id': 'chime', 'name': 'ناقوس'},
   ];
+
+  // مقدار پیش‌فرض برای صدای آلارم
 
   @override
   void initState() {
     super.initState();
+    // تنظیم زمان شروع با ساعت فعلی سیستم
+    final now = TimeOfDay.now();
+    _startTime = now;
+
+    // تنظیم مقدار پیش‌فرض آلارم به مقداری که در لیست وجود دارد
+    _selectedAlarmTone = 'notification_sound';
+
     if (widget.medicine != null) {
       _nameController.text = widget.medicine!.name;
       _dosageController.text = widget.medicine!.dosage;
       _selectedMedicineType = widget.medicine!.medicineType;
       _selectedTimes = List.from(widget.medicine!.reminderTimes);
       _selectedDays = List.from(widget.medicine!.weekDays);
-      _selectedAlarmTone = widget.medicine!.alarmTone;
+
+      // بررسی اینکه آیا مقدار alarmTone در لیست _alarmTones وجود دارد
+      final alarmExists = _alarmTones.any(
+        (tone) => tone['id'] == widget.medicine!.alarmTone,
+      );
+      _selectedAlarmTone =
+          alarmExists ? widget.medicine!.alarmTone : 'notification_sound';
     }
   }
 
@@ -240,25 +256,31 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   Widget _buildMedicineTypeSelector() {
-    // لیست انواع دارو با آیکون مناسب
+    // لیست انواع دارو با تصویر مناسب
     final medicineTypes = [
-      {'label': 'قرص', 'value': 'Tablet', 'icon': Icons.tablet},
-      {'label': 'کپسول', 'value': 'Capsule', 'icon': Icons.medication},
-      {'label': 'شربت', 'value': 'Liquid', 'icon': Icons.local_drink},
-      {'label': 'آمپول', 'value': 'Pill', 'icon': Icons.vaccines},
-      {'label': 'پماد', 'value': 'Cream', 'icon': Icons.healing},
-      {'label': 'قطره', 'value': 'Drop', 'icon': Icons.opacity},
-      {'label': 'اسپری', 'value': 'Spray', 'icon': Icons.spa},
-      {'label': 'سایر', 'value': 'Other', 'icon': Icons.medical_services},
+      {'label': 'قرص', 'value': 'قرص', 'image': 'assets/images/ghors.png'},
+      {
+        'label': 'کپسول',
+        'value': 'کپسول',
+        'image': 'assets/images/capsule.png',
+      },
+      {'label': 'شربت', 'value': 'شربت', 'image': 'assets/images/syrup.png'},
+      {
+        'label': 'آمپول',
+        'value': 'آمپول',
+        'image': 'assets/images/syringe.png',
+      },
+      {'label': 'پماد', 'value': 'پماد', 'image': 'assets/images/ointment.png'},
+      {'label': 'قطره', 'value': 'قطره', 'image': 'assets/images/eyedrops.png'},
+      {
+        'label': 'اسپری',
+        'value': 'اسپری',
+        'image': 'assets/images/medicine.png',
+      }, // تغییر به تصویر موجود
+      {'label': 'سایر', 'value': 'سایر', 'image': 'assets/images/all.png'},
     ];
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.grey.shade50,
-      ),
+    return SizedBox(
       height: 200,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +305,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                 return _buildMedicineTypeItem(
                   type['label'] as String,
                   type['value'] as String,
-                  type['icon'] as IconData,
+                  type['image'] as String,
                 );
               },
             ),
@@ -293,7 +315,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     );
   }
 
-  Widget _buildMedicineTypeItem(String label, String value, IconData icon) {
+  Widget _buildMedicineTypeItem(String label, String value, String imagePath) {
     final isSelected = _selectedMedicineType == value;
 
     return InkWell(
@@ -305,34 +327,23 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.15)
-              : Colors.white,
+          color:
+              isSelected ? AppColors.primary.withOpacity(0.15) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primary
-                : Colors.grey.shade300,
+            color: isSelected ? AppColors.primary : Colors.grey.shade300,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? AppColors.primary
-                  : Colors.grey.shade600,
-              size: 24,
-            ),
+            Image.asset(imagePath, width: 24, height: 24),
             SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: isSelected
-                    ? AppColors.primary
-                    : Colors.grey.shade800,
+                color: isSelected ? Colors.grey.shade800 : Colors.grey.shade800,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               textAlign: TextAlign.center,
@@ -359,33 +370,31 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           ),
         )
         : Column(
-          children: _selectedTimes.map((time) {
-            return Container(
-              margin: EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: ListTile(
-                leading: Icon(
-                  Icons.alarm,
-                  color: AppColors.primary,
-                ),
-                title: Text(
-                  TimeFormatter.formatTo12Hour(time),
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      _selectedTimes.remove(time);
-                    });
-                  },
-                ),
-              ),
-            );
-          }).toList(),
+          children:
+              _selectedTimes.map((time) {
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: Icon(Icons.alarm, color: AppColors.primary),
+                    title: Text(
+                      TimeFormatter.formatTo12Hour(time),
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () {
+                        setState(() {
+                          _selectedTimes.remove(time);
+                        });
+                      },
+                    ),
+                  ),
+                );
+              }).toList(),
         );
   }
 
@@ -421,16 +430,17 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isSelected 
-                      ? AppColors.primary
-                      : AppColors.background,
-                  boxShadow: isSelected 
-                      ? [BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        )] 
-                      : null,
+                  color: isSelected ? AppColors.primary : AppColors.background,
+                  boxShadow:
+                      isSelected
+                          ? [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ]
+                          : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -799,32 +809,101 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     // برای مثال با استفاده از پکیج audioplayers
   }
 
-  void _saveMedicine() {
+  void _saveMedicine() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedTimes.isEmpty) {
-        _showErrorSnackBar('لطفا حداقل یک زمان یادآوری انتخاب کنید');
-        return;
+      // بررسی مجوز اعلان‌های دقیق
+      bool hasPermission =
+          await NotificationService.checkExactAlarmPermission();
+
+      if (!hasPermission) {
+        // نمایش دیالوگ درخواست مجوز
+        bool permissionGranted = await _showPermissionRequestDialog();
+        if (!permissionGranted) {
+          // اگر کاربر مجوز را نداد، پیام هشدار نمایش دهید
+          _showErrorSnackBar(
+            'بدون مجوز اعلان‌های دقیق، یادآوری‌ها ممکن است به درستی کار نکنند',
+          );
+        }
       }
 
-      if (_selectedDays.isEmpty) {
-        _showErrorSnackBar('لطفا حداقل یک روز هفته را انتخاب کنید');
-        return;
-      }
+      // ایجاد شناسه منحصر به فرد برای دارو
+      final id = DateTime.now().millisecondsSinceEpoch % 0x7FFFFFFF;
 
       final medicine = Medicine(
-        id: widget.medicine?.id ?? Uuid().v4(),
+        id: id.toString(),
         name: _nameController.text,
         dosage: _dosageController.text,
-        medicineType: _selectedMedicineType,
         reminderTimes: _selectedTimes,
         weekDays: _selectedDays,
-        startDate: DateTime.now(),
-        isActive: widget.medicine?.isActive ?? true,
+        notes: _notesController.text,
+        isActive: true,
         alarmTone: _selectedAlarmTone,
+        medicineType: _selectedMedicineType,
+        startDate: DateTime.now(),
       );
 
+      // تنظیم اعلان‌ها برای دارو
+      if (medicine.isActive && medicine.reminderTimes.isNotEmpty) {
+        try {
+          int baseId = int.parse(medicine.id) % 0x7FFFFFFF;
+          await NotificationService.scheduleNotification(
+            id: baseId,
+            title: 'یادآوری دارو: ${medicine.name}',
+            body: 'زمان مصرف دارو با دوز ${medicine.dosage} فرا رسیده است.',
+            time: medicine.reminderTimes[0],
+            weekDays: medicine.weekDays,
+            sound: medicine.alarmTone,
+          );
+        } catch (e) {
+          print('خطا در تنظیم اعلان: $e');
+          _showErrorSnackBar(
+            'خطا در تنظیم اعلان‌ها. لطف<lemma مجوزهای برنامه را بررسی کنید.',
+          );
+        }
+      }
+
       Navigator.pop(context, medicine);
+
+      // نمایش پیام موفقیت
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('دارو با موفقیت اضافه شد و یادآوری‌ها تنظیم شدند'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
+  }
+
+  Future<bool> _showPermissionRequestDialog() async {
+    bool? result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => AlertDialog(
+            title: Text('نیاز به دسترسی'),
+            content: Text(
+              'برای یادآوری دقیق زمان مصرف داروها، برنامه نیاز به دسترسی به تنظیم اعلان‌های دقیق دارد. لطفا این دسترسی را در تنظیمات فعال کنید.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text('بعد'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context, true);
+                  await NotificationService.requestExactAlarmPermission();
+                },
+                child: Text('باز کردن تنظیمات'),
+              ),
+            ],
+          ),
+    );
+
+    return result ?? false;
   }
 
   void _showErrorSnackBar(String message) {

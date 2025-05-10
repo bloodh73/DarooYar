@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0
 
 environment:
   sdk: ^3.7.2
@@ -44,6 +44,10 @@ dependencies:
   shamsi_date: ^1.1.0
   day_night_time_picker: ^1.3.1
   persian_datetime_picker: ^3.1.0
+  package_info_plus: ^8.3.0
+  url_launcher: ^6.3.1
+  flutter_launcher_icons: ^0.13.1
+  # awesome_notifications: ^0.10.0
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +59,11 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -68,8 +77,16 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - assets/images/syringe.png
+    - assets/images/ointment.png
+    - assets/images/eyedrops.png
+    - assets/images/capsule.png
+    - assets/images/medicine.png
+    - assets/images/syrup.png
+    - assets/images/all.png
+    - assets/images/ghors.png
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

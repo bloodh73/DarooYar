@@ -4,6 +4,7 @@ import 'medicine_model.dart';
 import 'add_medicine_page.dart';
 import 'utils/time_formatter.dart';
 import 'notification_service.dart';
+// استفاده از سرویس جدید
 
 class MedicineDetailPage extends StatefulWidget {
   final Medicine medicine;
@@ -105,10 +106,11 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        MedicineCardStyle.getIconByType(_medicine.medicineType),
+                      child: Image.asset(
+                        MedicineCardStyle.getImagePathByType(_medicine.medicineType),
                         color: Colors.white,
-                        size: 36,
+                        width: 36,
+                        height: 36,
                       ),
                     ),
                   ),
@@ -453,12 +455,15 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                     endDate: _medicine.endDate,
                     isActive: value,
                     alarmTone: _medicine.alarmTone,
+                    notes: _medicine.notes,
                   );
                 });
 
                 if (value) {
                   for (TimeOfDay time in _medicine.reminderTimes) {
                     NotificationService.scheduleNotification(
+                      sound: _medicine.alarmTone,
+                      // استفاده از modulo برای محدود کردن شناسه به محدوده مجاز
                       id: _medicine.id.hashCode % 10000,
                       title: 'یادآوری دارو: ${_medicine.name}',
                       body:
@@ -491,27 +496,23 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         onPressed: () {
           showDialog(
             context: context,
-            builder:
-                (context) => AlertDialog(
-                  title: Text('حذف دارو'),
-                  content: Text('آیا از حذف این دارو اطمینان دارید؟'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('انصراف'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context); // بستن دیالوگ
-                        Navigator.pop(
-                          context,
-                          'delete',
-                        ); // برگشت به صفحه قبل با نتیجه حذف
-                      },
-                      child: Text('حذف', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
+            builder: (context) => AlertDialog(
+              title: Text('حذف دارو'),
+              content: Text('آیا از حذف این دارو اطمینان دارید؟'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('انصراف'),
                 ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // بستن دیالوگ
+                    Navigator.pop(context, 'delete'); // برگشت به صفحه قبل با نتیجه حذف
+                  },
+                  child: Text('حذف', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
           );
         },
         icon: Icon(Icons.delete_outline, color: Colors.white),
@@ -529,6 +530,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       ),
     );
   }
+
 
   void _editMedicine() async {
     final result = await Navigator.push(
@@ -562,3 +564,13 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     return "${date.year}/${date.month}/${date.day}";
   }
 }
+
+
+
+
+
+
+
+
+
+

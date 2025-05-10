@@ -3,8 +3,8 @@
     "short_name": "دارو یار",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#CF4DCE",
-    "theme_color": "#CF4DCE",
+    "background_color": "#1D737E",
+    "theme_color": "#1D737E",
     "description": "اپلیکیشن یادآوری مصرف دارو",
     "orientation": "portrait-primary",
     "prefer_related_applications": false

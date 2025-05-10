@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'notification_service.dart';
+import 'notification_service.dart'; // تغییر به سرویس جدید
 import 'main_page.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
+  // اطمینان از مقداردهی اولیه Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
   // مقداردهی اولیه سرویس اعلان‌ها
-  await NotificationService.initialize();
+  try {
+    await NotificationService.initialize(); // تغییر به سرویس جدید
+    print("سرویس اعلان با موفقیت راه‌اندازی شد");
+  } catch (e) {
+    print("خطا در راه‌اندازی سرویس اعلان: $e");
+  }
 
   runApp(MyApp());
 }
@@ -19,8 +25,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'دارو یار',
       theme: AppTheme.lightTheme,
-
-      themeMode: ThemeMode.system, // استفاده از تم سیستم
+      themeMode: ThemeMode.system,
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
