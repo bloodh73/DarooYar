@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:daroo/services/update_service.dart';
 import 'package:flutter/material.dart';
 import 'medicine_model.dart';
 import 'add_medicine_page.dart';
@@ -31,37 +32,33 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     _loadSavedMedicines();
 
-    // تست اعلان برای بررسی عملکرد
+    // درخواست مجوزهای لازم در زمان اجرای برنامه
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkNotificationPermissions();
+      _requestAllPermissions();
     });
   }
 
-  // بررسی مجوزهای اعلان و نمایش راهنما در صورت نیاز
-  void _checkNotificationPermissions() async {
-    // تست اعلان برای اطمینان از عملکرد صحیح
-    if (medicines.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('در حال بررسی سیستم اعلان‌ها...'),
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-
-      // تاخیر کوتاه برای نمایش اسنک‌بار
-      await Future.delayed(Duration(seconds: 2));
-
-      // ارسال اعلان تست
+  // متد جدید برای درخواست تمام مجوزهای مورد نیاز
+  Future<void> _requestAllPermissions() async {
+    try {
+      // درخواست مجوز اعلان‌ها
       await NotificationService.initialize();
-      await NotificationService.scheduleNotification(
-        id: 9999,
-        title: 'تست اعلان',
-        body: 'این یک اعلان تست است برای بررسی عملکرد سیستم',
-        time: TimeOfDay.now(),
-        weekDays: [DateTime.now().weekday], // اصلاح شده
-        sound: 'notification_sound',
-      );
+
+      // درخواست مجوز اعلان‌های دقیق
+      if (Platform.isAndroid) {
+        bool hasExactAlarmPermission =
+            await NotificationService.checkExactAlarmPermission();
+
+        if (!hasExactAlarmPermission) {
+          // نمایش دیالوگ درخواست مجوز
+          _showPermissionDialog();
+        }
+      }
+
+      // بررسی مجدد مجوزها پس از درخواست
+      _checkPermissions();
+    } catch (e) {
+      debugPrint('خطا در درخواست مجوزها: $e');
     }
   }
 
@@ -105,7 +102,8 @@ class _MainPageState extends State<MainPage> {
   void _showPermissionDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible:
+          false, // کاربر نمی‌تواند بدون انتخاب گزینه، دیالوگ را ببندد
       builder:
           (context) => AlertDialog(
             title: Text('نیاز به دسترسی'),
@@ -113,6 +111,22 @@ class _MainPageState extends State<MainPage> {
               'برای یادآوری دقیق زمان مصرف داروها، برنامه نیاز به دسترسی به تنظیم اعلان‌های دقیق دارد. لطفا این دسترسی را در تنظیمات فعال کنید.',
             ),
             actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // نمایش اسنک‌بار هشدار
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'بدون این مجوز، یادآوری‌ها ممکن است به درستی کار نکنند',
+                      ),
+                      duration: Duration(seconds: 5),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                child: Text('بعد<lemma'),
+              ),
               TextButton(
                 onPressed: () async {
                   Navigator.pop(context);
@@ -294,20 +308,41 @@ class _MainPageState extends State<MainPage> {
       await _saveMedicines();
 
       // تنظیم اعلان‌ها برای داروی جدید
-      if (result.isActive) {
-        // استفاده از شناسه اصلی دارو
-        int baseId = int.parse(result.id) % 0x7FFFFFFF;
-        NotificationService.scheduleNotification(
-          id: baseId,
-          title: 'یادآوری دارو: ${result.name}',
-          body: 'زمان مصرف دارو با دوز ${result.dosage} فرا رسیده است.',
-          time:
-              result.reminderTimes.isNotEmpty
-                  ? result.reminderTimes[0]
-                  : TimeOfDay.now(),
-          weekDays: result.weekDays,
-          sound: result.alarmTone,
-        );
+      if (result.isActive && result.reminderTimes.isNotEmpty) {
+        try {
+          // برای هر زمان یادآوری، اعلان جداگانه تنظیم کنیم
+          for (var time in result.reminderTimes) {
+            int baseId = int.parse(result.id) % 0x7FFFFFFF;
+            // برای هر زمان، یک شناسه متفاوت ایجاد کنیم
+            int notificationId = baseId + result.reminderTimes.indexOf(time);
+
+            await NotificationService.scheduleNotification(
+              id: notificationId,
+              title: 'یادآوری دارو: ${result.name}',
+              body: 'زمان مصرف دارو با دوز ${result.dosage} فرا رسیده است.',
+              time: time,
+              weekDays: result.weekDays,
+              sound: result.alarmTone,
+            );
+          }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('یادآوری دارو با موفقیت تنظیم شد'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } catch (e) {
+          print('خطا در تنظیم اعلان: $e');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'خطا در تنظیم یادآوری: لطف<lemma> دسترسی‌های برنامه را بررسی کنید',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -352,7 +387,6 @@ class _MainPageState extends State<MainPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('نسخه: 1.0.0'),
                 SizedBox(height: 8),
                 Text('این برنامه برای یادآوری مصرف داروها طراحی شده است.'),
                 SizedBox(height: 8),
@@ -2049,39 +2083,74 @@ class _MainPageState extends State<MainPage> {
                   'مجوز اجرای پس‌زمینه به برنامه داده شده باشد',
                 ),
                 SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await NotificationService.showImmediateNotification(
-                      id: 9999,
-                      title: 'تست اعلان',
-                      body: 'این یک اعلان تست است برای بررسی عملکرد سیستم',
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'اعلان تست ارسال شد. اگر دریافت نکردید، تنظیمات دستگاه را بررسی کنید.',
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await NotificationService.showImmediateNotification(
+                            id: 9999,
+                            title: 'تست اعلان فوری',
+                            body: 'این یک اعلان تست فوری است برای بررسی عملکرد سیستم',
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'اعلان تست فوری ارسال شد. اگر دریافت نکردید، تنظیمات دستگاه را بررسی کنید.',
+                              ),
+                              duration: Duration(seconds: 5),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          minimumSize: Size(double.infinity, 45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                        duration: Duration(seconds: 5),
-                        behavior: SnackBarBehavior.floating,
+                        child: Text('تست اعلان فوری'),
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    minimumSize: Size(double.infinity, 45),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ),
-                  child: Text('تست اعلان'),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(context);
+                          await NotificationService.testScheduleNotification();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'اعلان تست زمان‌بندی شده برای 10 ثانیه بعد تنظیم شد.',
+                              ),
+                              duration: Duration(seconds: 5),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.secondary,
+                          foregroundColor: Colors.white,
+                          minimumSize: Size(double.infinity, 45),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text('تست اعلان زمان‌بندی'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: Text('بستن'),
               ),
             ],

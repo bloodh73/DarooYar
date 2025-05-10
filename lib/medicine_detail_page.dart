@@ -1,9 +1,11 @@
+import 'package:daroo/data_service.dart';
 import 'package:daroo/theme/medicine_card_style.dart';
 import 'package:flutter/material.dart';
 import 'medicine_model.dart';
 import 'add_medicine_page.dart';
 import 'utils/time_formatter.dart';
 import 'notification_service.dart';
+
 // استفاده از سرویس جدید
 
 class MedicineDetailPage extends StatefulWidget {
@@ -57,7 +59,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                   SizedBox(height: 16),
                   _buildWeekDaysSection(),
                   SizedBox(height: 16),
-                  _buildStatusToggle(),
+                  _buildActiveSwitch(),
                   SizedBox(height: 24),
                   _buildDeleteButton(),
                 ],
@@ -107,7 +109,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                         ],
                       ),
                       child: Image.asset(
-                        MedicineCardStyle.getImagePathByType(_medicine.medicineType),
+                        MedicineCardStyle.getImagePathByType(
+                          _medicine.medicineType,
+                        ),
                         color: Colors.white,
                         width: 36,
                         height: 36,
@@ -387,62 +391,22 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     );
   }
 
-  Widget _buildStatusToggle() {
+  Widget _buildActiveSwitch() {
     return Card(
       elevation: 2,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color:
-                    _medicine.isActive
-                        ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _medicine.isActive
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                color:
-                    _medicine.isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey,
-                size: 22,
-              ),
+            Text(
+              'فعال',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'وضعیت یادآوری',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  _medicine.isActive
-                      ? 'یادآوری فعال است'
-                      : 'یادآوری غیرفعال است',
-                  style: TextStyle(
-                    color:
-                        _medicine.isActive
-                            ? Colors.green[700]
-                            : Colors.grey[600],
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            Spacer(),
             Switch(
               value: _medicine.isActive,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _medicine = Medicine(
                     id: _medicine.id,
@@ -459,23 +423,43 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
                   );
                 });
 
+                // ذخیره تغییرات
+                List<Medicine> medicines = await DataService.loadMedicines();
+                int index = medicines.indexWhere((m) => m.id == _medicine.id);
+                if (index != -1) {
+                  medicines[index] = _medicine;
+                  await DataService.saveMedicines(medicines);
+                }
+
+                // تنظیم یا لغو اعلان‌ها
                 if (value) {
-                  for (TimeOfDay time in _medicine.reminderTimes) {
-                    NotificationService.scheduleNotification(
-                      sound: _medicine.alarmTone,
-                      // استفاده از modulo برای محدود کردن شناسه به محدوده مجاز
-                      id: _medicine.id.hashCode % 10000,
+                  // تنظیم اعلان‌ها
+                  for (var time in _medicine.reminderTimes) {
+                    int baseId = int.parse(_medicine.id) % 0x7FFFFFFF;
+                    int notificationId =
+                        baseId + _medicine.reminderTimes.indexOf(time);
+
+                    await NotificationService.scheduleNotification(
+                      id: notificationId,
                       title: 'یادآوری دارو: ${_medicine.name}',
                       body:
                           'زمان مصرف دارو با دوز ${_medicine.dosage} فرا رسیده است.',
                       time: time,
                       weekDays: _medicine.weekDays,
+                      sound: _medicine.alarmTone,
                     );
                   }
                 } else {
-                  NotificationService.cancelNotification(
-                    _medicine.id.hashCode % 10000,
-                  );
+                  // لغو اعلان‌ها
+                  for (var time in _medicine.reminderTimes) {
+                    int baseId = int.parse(_medicine.id) % 0x7FFFFFFF;
+                    int notificationId =
+                        baseId + _medicine.reminderTimes.indexOf(time);
+
+                    await NotificationService.cancelNotification(
+                      notificationId,
+                    );
+                  }
                 }
               },
               activeColor: Theme.of(context).colorScheme.primary,
@@ -496,23 +480,27 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         onPressed: () {
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: Text('حذف دارو'),
-              content: Text('آیا از حذف این دارو اطمینان دارید؟'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('انصراف'),
+            builder:
+                (context) => AlertDialog(
+                  title: Text('حذف دارو'),
+                  content: Text('آیا از حذف این دارو اطمینان دارید؟'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('انصراف'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context); // بستن دیالوگ
+                        Navigator.pop(
+                          context,
+                          'delete',
+                        ); // برگشت به صفحه قبل با نتیجه حذف
+                      },
+                      child: Text('حذف', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context); // بستن دیالوگ
-                    Navigator.pop(context, 'delete'); // برگشت به صفحه قبل با نتیجه حذف
-                  },
-                  child: Text('حذف', style: TextStyle(color: Colors.red)),
-                ),
-              ],
-            ),
           );
         },
         icon: Icon(Icons.delete_outline, color: Colors.white),
@@ -530,7 +518,6 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       ),
     );
   }
-
 
   void _editMedicine() async {
     final result = await Navigator.push(
@@ -564,13 +551,3 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     return "${date.year}/${date.month}/${date.day}";
   }
 }
-
-
-
-
-
-
-
-
-
-

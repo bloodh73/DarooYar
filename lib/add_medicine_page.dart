@@ -74,6 +74,19 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   @override
+  void dispose() {
+    // آزادسازی کنترلرها
+    _nameController.dispose();
+    _dosageController.dispose();
+    _notesController.dispose();
+    
+    // لغو هرگونه عملیات غیرهمزمان در حال اجرا
+    // اگر از Future یا Timer استفاده می‌کنید، آنها را لغو کنید
+    
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -815,9 +828,14 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       bool hasPermission =
           await NotificationService.checkExactAlarmPermission();
 
+      if (!mounted) return; // بررسی وضعیت ویجت قبل از استفاده از context
+
       if (!hasPermission) {
         // نمایش دیالوگ درخواست مجوز
         bool permissionGranted = await _showPermissionRequestDialog();
+        
+        if (!mounted) return; // بررسی مجدد وضعیت ویجت
+        
         if (!permissionGranted) {
           // اگر کاربر مجوز را نداد، پیام هشدار نمایش دهید
           _showErrorSnackBar(
@@ -842,36 +860,33 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
         startDate: DateTime.now(),
       );
 
-      // تنظیم اعلان‌ها برای دارو
+      // تنظیم آلارم‌ها برای دارو
       if (medicine.isActive && medicine.reminderTimes.isNotEmpty) {
-        try {
+        // همچنان از اعلان‌ها نیز استفاده می‌کنیم
+        for (var time in medicine.reminderTimes) {
           int baseId = int.parse(medicine.id) % 0x7FFFFFFF;
+          int notificationId = baseId + medicine.reminderTimes.indexOf(time);
+          
           await NotificationService.scheduleNotification(
-            id: baseId,
+            id: notificationId,
             title: 'یادآوری دارو: ${medicine.name}',
             body: 'زمان مصرف دارو با دوز ${medicine.dosage} فرا رسیده است.',
-            time: medicine.reminderTimes[0],
+            time: time,
             weekDays: medicine.weekDays,
             sound: medicine.alarmTone,
           );
-        } catch (e) {
-          print('خطا در تنظیم اعلان: $e');
-          _showErrorSnackBar(
-            'خطا در تنظیم اعلان‌ها. لطف<lemma مجوزهای برنامه را بررسی کنید.',
-          );
         }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('یادآوری دارو با موفقیت تنظیم شد'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
-
+      
+      // برگرداندن دارو به صفحه اصلی
       Navigator.pop(context, medicine);
-
-      // نمایش پیام موفقیت
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('دارو با موفقیت اضافه شد و یادآوری‌ها تنظیم شدند'),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
-      );
     }
   }
 
